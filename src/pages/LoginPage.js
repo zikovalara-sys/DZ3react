@@ -4,118 +4,112 @@ const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    // Групуємо помилки в об'єкти для чистоти коду
-    const [emailError, setEmailError] = useState({ isError: false, msg: "" });
-    const [passwordError, setPasswordError] = useState({ isError: false, msg: "" });
+    const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
 
-    // Прапорці для відображення зеленої рамки успіху (is-valid)
-    const [isEmailValid, setIsEmailValid] = useState(false);
-    const [isPasswordValid, setIsPasswordValid] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
+    const [passwordTouched, setPasswordTouched] = useState(false);
 
-    // Регулярний вираз для перевірки коректності формату email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Валідація Email при введенні
+    const handleEmailChange = (e) => {
+        const value = e.target.value;
+        setEmail(value);
+        setEmailTouched(true);
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!value) {
+            setEmailError("Електронна пошта є обов'язковою");
+        } else if (!emailRegex.test(value)) {
+            setEmailError("Некоректний формат електронної пошти");
+        } else {
+            setEmailError("");
+        }
+    };
+
+    // Валідація Пароля при введенні (мінімум 6 символів)
+    const handlePasswordChange = (e) => {
+        const value = e.target.value;
+        setPassword(value);
+        setPasswordTouched(true);
+
+        if (!value) {
+            setPasswordError("Пароль є обов'язковим");
+        } else if (value.length < 6) {
+            setPasswordError("Пароль має містити щонайменше 6 символів");
+        } else {
+            setPasswordError("");
+        }
+    };
 
     const onHandleSubmit = (e) => {
         e.preventDefault();
 
-        let isValid = true;
-
-        // 1. Валідація Email
-        if (email.trim() === "") {
-            setEmailError({ isError: true, msg: "Введіть електронну пошту" });
-            setIsEmailValid(false);
-            isValid = false;
-        } else if (!emailRegex.test(email)) {
-            setEmailError({ isError: true, msg: "Некоректний формат електронної пошти (наприклад, user@mail.com)" });
-            setIsEmailValid(false);
-            isValid = false;
-        } else {
-            setEmailError({ isError: false, msg: "" });
-            setIsEmailValid(true);
+        // Якщо є помилки або поля порожні — не пускаємо далі
+        if (emailError || passwordError || !email || !password) {
+            alert("Будь ласка, виправте помилки у формі перед входом");
+            return;
         }
 
-        // 2. Валідація Пароля
-        if (password === "") {
-            setPasswordError({ isError: true, msg: "Введіть пароль" });
-            setIsPasswordValid(false);
-            isValid = false;
-        } else if (password.length < 6) {
-            setPasswordError({ isError: true, msg: "Пароль має містити не менше 6 символів" });
-            setIsPasswordValid(false);
-            isValid = false;
-        } else {
-            setPasswordError({ isError: false, msg: "" });
-            setIsPasswordValid(true);
-        }
+        // ТУТ ЗМІНЕНО: Тепер пускає з будь-якими даними, які пройшли попередню валідацію
+        console.log("---- Вхід успішний! -----");
+        console.log("Email користувача: ", email.trim());
 
-        // 3. Перевірка результату валідації
-        if (isValid) {
-            console.log("----Вхід користувача-----");
-            console.log("Email = ", email);
-            console.log("Password = ", password);
+        alert(`Вітаємо у системі! Ви увійшли як: ${email.trim()}`);
 
-            alert("Вхід успішний! Вітаємо у системі.");
+        // Очищаємо форму після успішного входу
+        setEmail("");
+        setPassword("");
+        setEmailTouched(false);
+        setPasswordTouched(false);
+    };
 
-            // Скидання форми та успішних статусів
-            setEmail("");
-            setPassword("");
-            setIsEmailValid(false);
-            setIsPasswordValid(false);
-        } else {
-            alert("Будь ласка, виправте помилки у формі");
-        }
+    const getEmailClass = () => {
+        if (!emailTouched) return "form-control";
+        return emailError ? "form-control is-invalid" : "form-control is-valid";
+    };
+
+    const getPasswordClass = () => {
+        if (!passwordTouched) return "form-control";
+        return passwordError ? "form-control is-invalid" : "form-control is-valid";
     };
 
     return (
         <div className="container mt-2">
             <h1 className="text-center">Вхід на сайт</h1>
-            <form className="col-md-6 offset-md-3" onSubmit={onHandleSubmit}>
+            <form className="col-md-6 offset-md-3" onSubmit={onHandleSubmit} noValidate>
 
-                {/* Поле Email */}
                 <div className="mb-3">
                     <label htmlFor="email" className="form-label">Електронна пошта</label>
                     <input
-                        type="text" // змінено на text, щоб HTML5 не перебивав кастомну валідацію Bootstrap
-                        className={`form-control ${
-                            emailError.isError ? "is-invalid" : isEmailValid ? "is-valid" : ""
-                        }`}
+                        type="email"
+                        className={getEmailClass()}
                         id="email"
                         value={email}
-                        onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (emailError.isError) setEmailError({ isError: false, msg: "" });
-                        }}
+                        onChange={handleEmailChange}
                     />
-                    {emailError.isError && (
-                        <div className="invalid-feedback">{emailError.msg}</div>
-                    )}
+                    {emailError && <div className="invalid-feedback">{emailError}</div>}
                 </div>
 
-                {/* Поле Пароля */}
                 <div className="mb-3">
                     <label htmlFor="password" className="form-label">Пароль</label>
                     <input
                         type="password"
-                        className={`form-control ${
-                            passwordError.isError ? "is-invalid" : isPasswordValid ? "is-valid" : ""
-                        }`}
+                        className={getPasswordClass()}
                         id="password"
                         value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (passwordError.isError) setPasswordError({ isError: false, msg: "" });
-                        }}
+                        onChange={handlePasswordChange}
                     />
-                    {passwordError.isError && (
-                        <div className="invalid-feedback">{passwordError.msg}</div>
-                    )}
+                    {passwordError && <div className="invalid-feedback">{passwordError}</div>}
                 </div>
 
-                <button type="submit" className="btn btn-primary">Вхід</button>
+                {/* Кнопка заблокована, поки користувач не введе правильний email та хоча б 6 знаків пароля */}
+                <button type="submit" className="btn btn-primary" disabled={!!emailError || !!passwordError || !email || !password}>
+                    Вхід
+                </button>
             </form>
         </div>
     );
 };
 
 export default LoginPage;
-
